@@ -1,5 +1,5 @@
 import sublime, sublime_plugin
-import os
+import os, fnmatch
 from glob import iglob
 from random import choice
 
@@ -8,30 +8,7 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
         if int(sublime.version()) > 3000:
             color_schemes = sublime.find_resources("*.tmTheme")
         else:
-            color_schemes = [
-                "All Hallow's Eve",
-                "Amy",
-                "Blackboard",
-                "Cobalt",
-                "Dawn",
-                "Eiffel",
-                "Espresso Libre",
-                "IDLE",
-                "LAZY",
-                "Mac Classic",
-                "MagicWB (Amiga)",
-                "Monokai Bright",
-                "Monokai",
-                "Pastels on Dark",
-                "Slush & Poppies",
-                "Solarized (Dark)",
-                "Solarized (Light)",
-                "SpaceCadet",
-                "Sunburst",
-                "Twilight",
-                "Zenburnesque",
-                "iPlastic"
-            ]
+            color_schemes = list(self.find_color_schemes(sublime.packages_path(), '*.tmTheme'))
 
         current_scheme_index = self.current_scheme_index(color_schemes)
 
@@ -51,6 +28,13 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
                 self.window.show_quick_panel(items, on_done, 0, current_scheme_index, on_done)
             else:
                 self.window.show_quick_panel(items, on_done, 0, current_scheme_index)
+
+    def find_color_schemes(self, directory, pattern):
+        for root, dirs, files in os.walk(directory):
+            for basename in files:
+                if fnmatch.fnmatch(basename, pattern):
+                    filename = os.path.join(root, basename)
+                    yield filename
 
     def move_color_scheme(self, color_schemes, direction):
         current_index = self.current_scheme_index(color_schemes)
