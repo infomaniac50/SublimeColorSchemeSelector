@@ -33,22 +33,29 @@ class SelectColorSchemeCommand(sublime_plugin.WindowCommand):
         for root, dirs, files in os.walk(directory):
             for basename in files:
                 if fnmatch.fnmatch(basename, pattern):
-                    filename = os.path.join(root, basename)
-                    yield filename
+                    filename = os.path.join(os.path.basename(sublime.packages_path()), os.path.relpath(os.path.join(root, basename), sublime.packages_path()))
+                    yield filename.replace(os.path.sep, os.path.altsep)
 
     def move_color_scheme(self, color_schemes, direction):
         current_index = self.current_scheme_index(color_schemes)
+
         if direction == 'previous':
-            index = current_index - 1
+            current_index -= 1
         elif direction == 'next':
-            index = current_index + 1 if current_index < len(color_schemes) else 0
+            current_index += 1
         else:
             raise ValueError
-        self.set_color_scheme(color_schemes[index])
+
+        if current_index < 0:
+            current_index = len(color_schemes) - 1
+        elif current_index >= len(color_schemes):
+            current_index = 0
+
+        self.set_color_scheme(color_schemes[current_index])
 
     def current_scheme_index(self, color_schemes):
         current_scheme = self.load_settings().get('color_scheme')
-        return [c for c in color_schemes].index(current_scheme)
+        return color_schemes.index(current_scheme)
 
     def set_color_scheme(self, color_scheme_path):
         self.load_settings().set('color_scheme', color_scheme_path)
